@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class ChildAI : MonoBehaviour
+public class KidAI : MonoBehaviour
 {
-    private NavMeshAgent agent;
-    public float actionInterval = 5f; // 電気をつける間隔
+    NavMeshAgent agent;
+    [SerializeField] float actionInterval = 5f; // 電気をつける間隔
 
     float _timer;
     int _targetRoomIndex = -1;

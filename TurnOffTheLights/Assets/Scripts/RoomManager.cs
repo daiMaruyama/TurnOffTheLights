@@ -56,8 +56,8 @@ public class RoomManager : MonoBehaviour
         RoomData room = rooms[roomIndex];
         room._isAnimating = true;
 
-        float startAngle = open ? 0f : -90f;
-        float endAngle = open ? -90f : 0f;
+        float startAngle = open ? -90f: 0f;
+        float endAngle = open ? 0f : -90f;
 
         float elapsed = 0f;
 
