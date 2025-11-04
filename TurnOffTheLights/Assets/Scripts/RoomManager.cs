@@ -12,6 +12,16 @@ public class RoomManager : MonoBehaviour
     void Awake()
     {
         if (Instance == null) Instance = this;
+        InitializeRooms();
+    }
+    void InitializeRooms()
+    {
+        foreach (var room in rooms)
+        {
+            room._isOpen = false;
+            room._isAnimating = false;
+            room._roomLight.enabled = false; // 電気を消す
+        }
     }
 
     // プレイヤー用：ドアを閉めて電気を消す
@@ -56,8 +66,11 @@ public class RoomManager : MonoBehaviour
         RoomData room = rooms[roomIndex];
         room._isAnimating = true;
 
-        float startAngle = open ? -90f: 0f;
-        float endAngle = open ? 0f : -90f;
+        // 初期回転を保存（X, Zを保持するため）
+        Vector3 originalRotation = room._door.localRotation.eulerAngles;
+
+        float startAngle = open ? 0f : -90f;
+        float endAngle = open ? -90f : 0f;
 
         float elapsed = 0f;
 
@@ -65,14 +78,14 @@ public class RoomManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / room._animationDuration;
-
             float currentAngle = Mathf.Lerp(startAngle, endAngle, t);
-            room._door.localRotation = Quaternion.Euler(0, currentAngle, 0);
 
+            // Y成分だけを変更、X・Zは元の値を保持
+            room._door.localRotation = Quaternion.Euler(originalRotation.x, currentAngle, originalRotation.z);
             yield return null;
         }
 
-        room._door.localRotation = Quaternion.Euler(0, endAngle, 0);
+        room._door.localRotation = Quaternion.Euler(originalRotation.x, endAngle, originalRotation.z);
         room._roomLight.enabled = open;
         room._isOpen = open;
         room._isAnimating = false;
