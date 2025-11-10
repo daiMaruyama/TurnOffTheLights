@@ -6,11 +6,11 @@ using UnityEngine.AI;
 public class KidSample : MonoBehaviour
 {
     [SerializeField]
-    private NavMeshAgent _navMeshAgent;
+    NavMeshAgent _navMeshAgent;
 
     //’Ç‚¢‚©‚¯‚é‘ÎÛ
     [SerializeField]
-    private Transform _player;
+    Transform _player;
 
     void Update()
     {
