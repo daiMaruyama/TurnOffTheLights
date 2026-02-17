@@ -4,14 +4,14 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Transform cameraTransform;
-    [SerializeField] private Rigidbody rb;
+    [SerializeField] Transform cameraTransform;
+    [SerializeField] Rigidbody rb;
 
     [Header("Settings")]
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float rotationSmoothTime = 0.1f;
+    [SerializeField] float moveSpeed = 5f;
+    [SerializeField] float rotationSmoothTime = 0.1f;
 
-    private float turnSmoothVelocity;
+    float turnSmoothVelocity;
 
     void FixedUpdate()
     {
