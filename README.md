@@ -5,7 +5,7 @@
 親（プレイヤー）となり、NavMeshで自律移動する子供（AI）がつけた電気をひたすら消して回ります。
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Unity-6000.1.0f1-000000?style=for-the-badge&logo=unity&logoColor=white" />
+  <img src="https://img.shields.io/badge/Unity-6000.3.8f1-000000?style=for-the-badge&logo=unity&logoColor=white" />
   <img src="https://img.shields.io/badge/Status-In_Development-yellow?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Tech-NavMesh-blue?style=for-the-badge" />
 </p>
