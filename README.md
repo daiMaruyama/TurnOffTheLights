@@ -50,5 +50,5 @@
 ---
 
 ## 🛠 Environment
-- Unity 6 (6000.1.0f1)
+- Unity 6 (6000.3.8f1)
 - GitHub
