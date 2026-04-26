@@ -99,3 +99,11 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 TurnOffTheLights/Assets/IgnoreFolder
 TurnOffTheLights/Assets/TextMesh Pro
+
+# Third-party assets (install manually via Asset Store)
+TurnOffTheLights/Assets/Plugins/Demigiant/
+TurnOffTheLights/Assets/Plugins/Demigiant.meta
+
+# Personal IDE settings and auto-generated solution
+TurnOffTheLights/.vscode/
+TurnOffTheLights/*.slnx
