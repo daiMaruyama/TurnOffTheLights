@@ -57,11 +57,11 @@ public class AudioManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"�d�����Ă���T�E���h��������܂�: {data.name}");
+                Debug.LogWarning($"重複しているサウンド名があります: {data.name}");
             }
         }
 
-        // �V�[�����ς�����Ƃ���BGM�������ŕύX
+        // シーンが変わったときにBGMを自動で変更
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -70,7 +70,7 @@ public class AudioManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // �V�[���ǂݍ��ݎ��Ɏ�����BGM�؂�ւ�
+    // シーン読み込み時に自動でBGM切り替え
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         string bgmName = $"BGM_{scene.name}";
@@ -80,7 +80,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"���̃V�[����p��BGM�͓o�^����Ă��܂���: {scene.name}");
+            Debug.Log($"このシーン専用のBGMは登録されていません: {scene.name}");
         }
     }
 
@@ -115,7 +115,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"�o�^����Ă��Ȃ��T�E���h���ł�: {name}");
+            Debug.LogWarning($"登録されていないサウンド名です: {name}");
         }
     }
 
