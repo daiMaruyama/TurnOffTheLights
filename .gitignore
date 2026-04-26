@@ -103,6 +103,8 @@ TurnOffTheLights/Assets/TextMesh Pro
 # Third-party assets (install manually via Asset Store)
 TurnOffTheLights/Assets/Plugins/Demigiant/
 TurnOffTheLights/Assets/Plugins/Demigiant.meta
+TurnOffTheLights/Assets/Resources/DOTweenSettings.asset
+TurnOffTheLights/Assets/Resources/DOTweenSettings.asset.meta
 
 # Personal IDE settings and auto-generated solution
 TurnOffTheLights/.vscode/
