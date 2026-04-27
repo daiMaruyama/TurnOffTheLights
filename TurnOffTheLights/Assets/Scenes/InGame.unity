@@ -16513,7 +16513,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 906565056}
+  - component: {fileID: 906565057}
   - component: {fileID: 906565055}
+  - component: {fileID: 906565058}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -16552,6 +16554,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &906565057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 906565054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b354c97da2bc548b0899fe6f3bd2df01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  _resultUI: {fileID: 0}
+--- !u!114 &906565058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 906565054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bef82b38427a8a4ba6a66c9e68b08e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
+  _electricityRatePerSecond: 55
+  _gameDuration: 90
+  OnGameEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  OnScoreUpdated:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &907115695
 GameObject:
   m_ObjectHideFlags: 0

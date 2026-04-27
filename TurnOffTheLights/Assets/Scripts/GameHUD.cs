@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// ゲーム中のHUD表示を管理する。
@@ -10,10 +10,10 @@ public class GameHUD : MonoBehaviour
 {
 	[Header("UI References")]
 	[Tooltip("電気代を表示するテキスト")]
-	[SerializeField] TextMeshProUGUI _electricityCostText;
+	[SerializeField] Text _electricityCostText;
 
 	[Tooltip("残り時間を表示するテキスト")]
-	[SerializeField] TextMeshProUGUI _remainingTimeText;
+	[SerializeField] Text _remainingTimeText;
 
 	void OnEnable()
 	{

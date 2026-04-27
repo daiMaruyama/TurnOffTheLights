@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using GameJamCore;
 using GameJamScene;
@@ -16,10 +16,10 @@ public class ResultUI : MonoBehaviour
 	[SerializeField] GameObject _panel;
 
 	[Tooltip("電気代を表示するテキスト")]
-	[SerializeField] TextMeshProUGUI _costText;
+	[SerializeField] Text _costText;
 
 	[Tooltip("ランクを表示するテキスト")]
-	[SerializeField] TextMeshProUGUI _rankText;
+	[SerializeField] Text _rankText;
 
 	[Header("ランク基準（電気代の上限値）")]
 	[Tooltip("Sランク：この値以下")]
