@@ -11,11 +11,35 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float moveSpeed = 5f;
     [SerializeField] float rotationSmoothTime = 0.1f;
 
+    [Header("Recovery")]
+    [SerializeField] Key _returnToStartKey = Key.R;
+
     float turnSmoothVelocity;
+    Vector3 _initialPosition;
+    Quaternion _initialRotation;
+
+    void Awake()
+    {
+        _initialPosition = transform.position;
+        _initialRotation = transform.rotation;
+    }
+
+    void Update()
+    {
+        if (Keyboard.current == null)
+        {
+            return;
+        }
+
+        if (Keyboard.current[_returnToStartKey].wasPressedThisFrame)
+        {
+            ReturnToStartPosition();
+        }
+    }
 
     void FixedUpdate()
     {
-        if (Keyboard.current == null || cameraTransform == null) return;
+        if (Keyboard.current == null || cameraTransform == null || rb == null) return;
 
         Vector2 input = Vector2.zero;
         if (Keyboard.current.wKey.isPressed) input.y += 1;
@@ -35,5 +59,18 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
         rb.MovePosition(rb.position + moveDir.normalized * moveSpeed * Time.fixedDeltaTime);
+    }
+
+    void ReturnToStartPosition()
+    {
+        transform.SetPositionAndRotation(_initialPosition, _initialRotation);
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = _initialPosition;
+            rb.rotation = _initialRotation;
+        }
     }
 }

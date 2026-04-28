@@ -1,9 +1,13 @@
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /// <summary>
 /// プレイヤーのインタラクション処理。
-/// Raycastでドアを検出し、Eキーでドアを閉めてライトを消す。
+/// Raycastでライト点灯中のドアを検出し、Eキー長押しで閉める。
 /// プレイヤーオブジェクトにアタッチして使用する。
+/// Legacy Input Manager / new Input System の両方に対応。
 /// </summary>
 public class PlayerInteraction : MonoBehaviour
 {
@@ -11,43 +15,144 @@ public class PlayerInteraction : MonoBehaviour
 	[Tooltip("ドアに反応できる最大距離")]
 	[SerializeField] float _interactionDistance = 3f;
 
+	[Tooltip("検出範囲の半径（SphereCast用）。大きいほど判定が緩くなる")]
+	[SerializeField] float _detectionRadius = 0.5f;
+
 	[Tooltip("ドア判定用のレイヤーマスク")]
 	[SerializeField] LayerMask _doorLayer;
 
-	Camera _playerCamera;
+	[Tooltip("長押しでドアを閉めるまでの時間（秒）")]
+	[SerializeField] float _holdDuration = 1f;
 
-	void Start()
+	[Tooltip("Legacy Input Manager 用のキー")]
+	[SerializeField] KeyCode _interactionKey = KeyCode.E;
+
+	[Tooltip("プレイヤーのカメラ。未設定の場合はCamera.mainを使う")]
+	[SerializeField] Camera _playerCamera;
+	int _hoveredRoomIndex = -1;
+	float _holdElapsed;
+	bool _waitingForKeyRelease;
+
+	void Awake()
 	{
-		_playerCamera = Camera.main;
+		if (_playerCamera == null)
+		{
+			_playerCamera = Camera.main;
+		}
 	}
+
+	/// <summary>現在ターゲット中の部屋のインデックス。なければ-1</summary>
+	public int HoveredRoomIndex => _hoveredRoomIndex;
+
+	/// <summary>長押しの進行度（0〜1）。UIゲージのfillAmountに使う</summary>
+	public float HoldProgress => _holdDuration > 0f ? Mathf.Clamp01(_holdElapsed / _holdDuration) : 0f;
 
 	void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.E))
+		UpdateHover();
+
+		bool keyHeld = IsInteractionKeyHeld();
+
+		if (!keyHeld)
 		{
-			TryCloseDoor();
+			_waitingForKeyRelease = false;
+		}
+
+		if (_hoveredRoomIndex >= 0 && keyHeld && !_waitingForKeyRelease)
+		{
+			_holdElapsed += Time.deltaTime;
+
+			if (_holdElapsed >= _holdDuration)
+			{
+				RoomManager.Instance.TryCloseRoom(_hoveredRoomIndex);
+				_holdElapsed = 0f;
+				_hoveredRoomIndex = -1;
+				_waitingForKeyRelease = true;
+			}
+		}
+		else
+		{
+			_holdElapsed = 0f;
 		}
 	}
 
 	/// <summary>
-	/// カメラ正面にRayを飛ばし、ドアに当たったら対応する部屋を閉める。
+	/// カメラ正面のRayでドアを検出し、ライト点灯中の部屋なら hover 状態にする。
 	/// </summary>
-	void TryCloseDoor()
+	void UpdateHover()
 	{
+		if (_playerCamera == null || RoomManager.Instance == null)
+		{
+			return;
+		}
+
 		Ray ray = new Ray(_playerCamera.transform.position, _playerCamera.transform.forward);
 
-		if (Physics.Raycast(ray, out RaycastHit hit, _interactionDistance, _doorLayer))
+		if (Physics.SphereCast(ray, _detectionRadius, out RaycastHit hit, _interactionDistance, _doorLayer))
 		{
-			var rooms = RoomManager.Instance.Rooms;
-
-			for (int i = 0; i < rooms.Count; i++)
+			int roomIndex = FindHitRoomIndex(hit.transform);
+			if (roomIndex >= 0)
 			{
-				if (hit.transform == rooms[i].Door)
+				var room = RoomManager.Instance.Rooms[roomIndex];
+
+				if (room.IsOpen)
 				{
-					RoomManager.Instance.CloseRoom(i);
-					break;
+					if (_hoveredRoomIndex != roomIndex)
+					{
+						_hoveredRoomIndex = roomIndex;
+						_holdElapsed = 0f;
+					}
+					return;
 				}
 			}
 		}
+
+		if (_hoveredRoomIndex != -1)
+		{
+			_hoveredRoomIndex = -1;
+			_holdElapsed = 0f;
+		}
+	}
+
+	int FindHitRoomIndex(Transform hitTransform)
+	{
+		var rooms = RoomManager.Instance.Rooms;
+
+		for (int i = 0; i < rooms.Count; i++)
+		{
+			Transform door = rooms[i].Door;
+			if (door == null)
+			{
+				continue;
+			}
+
+			if (hitTransform == door || hitTransform.IsChildOf(door) || door.IsChildOf(hitTransform))
+			{
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	/// <summary>
+	/// Legacy / new Input System の両方をチェックする。
+	/// どちらかでキーが押下されていればtrueを返す。
+	/// </summary>
+	bool IsInteractionKeyHeld()
+	{
+#if ENABLE_INPUT_SYSTEM
+		if (Keyboard.current != null && Keyboard.current.eKey.isPressed)
+		{
+			return true;
+		}
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+		if (Input.GetKey(_interactionKey))
+		{
+			return true;
+		}
+#endif
+		return false;
 	}
 }

@@ -1,8 +1,9 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
 /// InGameシーンの司令塔。
-/// シーン開始時にScoreManagerを起動し、終了時にResultUIを表示する。
+/// 開始カウントダウン、終了演出、リザルト表示を制御する。
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -10,8 +11,14 @@ public class GameManager : MonoBehaviour
 	[Tooltip("ゲーム終了時に表示するリザルトUI")]
 	[SerializeField] ResultUI _resultUI;
 
+	GameHUD _gameHUD;
+	bool _isEnding;
+
 	void Start()
 	{
+		EnsureResultUI();
+		EnsureGameHUD();
+
 		if (_resultUI != null)
 		{
 			_resultUI.Hide();
@@ -20,12 +27,47 @@ public class GameManager : MonoBehaviour
 		if (ScoreManager.Instance != null)
 		{
 			ScoreManager.Instance.OnGameEnd.AddListener(OnGameEnd);
-			ScoreManager.Instance.StartGame();
+			StartCoroutine(BeginGameRoutine());
 		}
 		else
 		{
 			Debug.LogError("ScoreManager.Instance が見つかりません。シーン上に配置されているか確認してください。");
 		}
+	}
+
+	void EnsureResultUI()
+	{
+		if (_resultUI != null)
+		{
+			return;
+		}
+
+		_resultUI = FindAnyObjectByType<ResultUI>(FindObjectsInactive.Include);
+
+		if (_resultUI == null)
+		{
+			_resultUI = ResultUI.CreateFallbackUI();
+		}
+	}
+
+	void EnsureGameHUD()
+	{
+		if (_gameHUD != null)
+		{
+			return;
+		}
+
+		_gameHUD = FindAnyObjectByType<GameHUD>(FindObjectsInactive.Include);
+	}
+
+	IEnumerator BeginGameRoutine()
+	{
+		if (_gameHUD != null)
+		{
+			yield return _gameHUD.PlayIntroSequence();
+		}
+
+		ScoreManager.Instance.StartGame();
 	}
 
 	void OnDestroy()
@@ -38,6 +80,22 @@ public class GameManager : MonoBehaviour
 
 	void OnGameEnd(float totalElectricityCost)
 	{
+		if (_isEnding)
+		{
+			return;
+		}
+
+		_isEnding = true;
+		StartCoroutine(EndGameRoutine(totalElectricityCost));
+	}
+
+	IEnumerator EndGameRoutine(float totalElectricityCost)
+	{
+		if (_gameHUD != null)
+		{
+			yield return _gameHUD.PlayFinishSequence();
+		}
+
 		if (_resultUI != null)
 		{
 			_resultUI.Show(totalElectricityCost);

@@ -1,13 +1,13 @@
-using UnityEngine;
-using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using GameJamCore;
 using GameJamScene;
+using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// ゲーム結果表示UI。
 /// 電気代から評価ランクを計算して表示する。
-/// リトライ・タイトル戻るボタンのコールバックも持つ。
+/// 必要な参照がない場合は実行時に簡易UIを自動生成する。
 /// </summary>
 public class ResultUI : MonoBehaviour
 {
@@ -20,6 +20,9 @@ public class ResultUI : MonoBehaviour
 
 	[Tooltip("ランクを表示するテキスト")]
 	[SerializeField] Text _rankText;
+
+	[Tooltip("ひとこと評価を表示するテキスト")]
+	[SerializeField] Text _commentText;
 
 	[Header("ランク基準（電気代の上限値）")]
 	[Tooltip("Sランク：この値以下")]
@@ -38,22 +41,31 @@ public class ResultUI : MonoBehaviour
 	[Tooltip("タイトル戻り時にロードするシーン名")]
 	[SerializeField] string _titleSceneName = "Title";
 
-	/// <summary>
-	/// リザルトを非表示にする。GameManagerからゲーム開始時に呼ばれる。
-	/// </summary>
+	public static ResultUI CreateFallbackUI()
+	{
+		var root = new GameObject("RuntimeResultUI");
+		return root.AddComponent<ResultUI>();
+	}
+
+	void Awake()
+	{
+		EnsureUI();
+	}
+
 	public void Hide()
 	{
+		EnsureUI();
+
 		if (_panel != null)
 		{
 			_panel.SetActive(false);
 		}
 	}
 
-	/// <summary>
-	/// リザルトを表示する。電気代に応じてランクも計算して表示する。
-	/// </summary>
 	public void Show(float totalCost)
 	{
+		EnsureUI();
+
 		if (_panel != null)
 		{
 			_panel.SetActive(true);
@@ -61,26 +73,28 @@ public class ResultUI : MonoBehaviour
 
 		if (_costText != null)
 		{
-			_costText.text = $"電気代: {Mathf.FloorToInt(totalCost):N0}円";
+			_costText.text = $"TOTAL COST\n{Mathf.FloorToInt(totalCost):N0} 円";
 		}
+
+		string rank = CalculateRank(totalCost);
 
 		if (_rankText != null)
 		{
-			_rankText.text = CalculateRank(totalCost);
+			_rankText.text = $"RANK  {rank}";
+			_rankText.color = GetRankColor(rank);
+		}
+
+		if (_commentText != null)
+		{
+			_commentText.text = GetComment(rank);
 		}
 	}
 
-	/// <summary>
-	/// リトライボタンのOnClickに登録する。InGameシーンを再ロードする。
-	/// </summary>
 	public void OnRetryButtonClicked()
 	{
 		LoadSceneAsync(_inGameSceneName).Forget();
 	}
 
-	/// <summary>
-	/// タイトル戻るボタンのOnClickに登録する。
-	/// </summary>
 	public void OnTitleButtonClicked()
 	{
 		LoadSceneAsync(_titleSceneName).Forget();
@@ -94,8 +108,152 @@ public class ResultUI : MonoBehaviour
 		return "C";
 	}
 
+	Color GetRankColor(string rank)
+	{
+		switch (rank)
+		{
+			case "S": return new Color(1f, 0.93f, 0.45f);
+			case "A": return new Color(0.45f, 0.95f, 0.65f);
+			case "B": return new Color(0.55f, 0.85f, 1f);
+			default: return new Color(1f, 0.55f, 0.55f);
+		}
+	}
+
+	string GetComment(string rank)
+	{
+		switch (rank)
+		{
+			case "S": return "見回り完璧。電気のムダがほとんどありませんでした。";
+			case "A": return "かなり優秀。あと少しで節電マスターです。";
+			case "B": return "まずまず。消し忘れをもう少し減らせそうです。";
+			default: return "部屋がかなり明るいままでした。次はもっと急いで消灯しましょう。";
+		}
+	}
+
 	async UniTaskVoid LoadSceneAsync(string sceneName)
 	{
 		await ServiceLocator.Get<ISceneService>().LoadAsync(sceneName);
+	}
+
+	void EnsureUI()
+	{
+		if (_panel != null && _costText != null && _rankText != null && _commentText != null)
+		{
+			return;
+		}
+
+		BuildRuntimeUI();
+	}
+
+	void BuildRuntimeUI()
+	{
+		Transform existingCanvas = transform.Find("ResultCanvas");
+		if (existingCanvas != null)
+		{
+			Destroy(existingCanvas.gameObject);
+		}
+
+		Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+		var canvasObject = new GameObject("ResultCanvas");
+		canvasObject.transform.SetParent(transform, false);
+
+		var canvas = canvasObject.AddComponent<Canvas>();
+		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+		canvas.sortingOrder = 100;
+		canvasObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+		canvasObject.AddComponent<GraphicRaycaster>();
+
+		_panel = CreateUiObject("Panel", canvasObject.transform);
+		var panelRect = _panel.GetComponent<RectTransform>();
+		panelRect.anchorMin = new Vector2(0f, 0f);
+		panelRect.anchorMax = new Vector2(1f, 1f);
+		panelRect.offsetMin = Vector2.zero;
+		panelRect.offsetMax = Vector2.zero;
+
+		var panelImage = _panel.AddComponent<Image>();
+		panelImage.color = new Color(0.04f, 0.05f, 0.09f, 0.9f);
+
+		var titleText = CreateText("TitleText", _panel.transform, font, 58, FontStyle.Bold, TextAnchor.MiddleCenter);
+		titleText.text = "RESULT";
+		titleText.color = Color.white;
+		SetRect(titleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 220f), new Vector2(720f, 80f));
+
+		_costText = CreateText("CostText", _panel.transform, font, 44, FontStyle.Bold, TextAnchor.MiddleCenter);
+		_costText.color = new Color(0.96f, 0.98f, 1f);
+		SetRect(_costText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 90f), new Vector2(720f, 120f));
+
+		_rankText = CreateText("RankText", _panel.transform, font, 56, FontStyle.Bold, TextAnchor.MiddleCenter);
+		SetRect(_rankText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f), new Vector2(720f, 80f));
+
+		_commentText = CreateText("CommentText", _panel.transform, font, 28, FontStyle.Normal, TextAnchor.MiddleCenter);
+		_commentText.color = new Color(0.86f, 0.9f, 0.96f);
+		_commentText.horizontalOverflow = HorizontalWrapMode.Wrap;
+		_commentText.verticalOverflow = VerticalWrapMode.Overflow;
+		SetRect(_commentText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -90f), new Vector2(760f, 100f));
+
+		Button retryButton = CreateButton("RetryButton", _panel.transform, font, "RETRY", new Vector2(-170f, -220f));
+		retryButton.onClick.AddListener(OnRetryButtonClicked);
+
+		Button titleButton = CreateButton("TitleButton", _panel.transform, font, "TITLE", new Vector2(170f, -220f));
+		titleButton.onClick.AddListener(OnTitleButtonClicked);
+
+		_panel.SetActive(false);
+	}
+
+	Button CreateButton(string name, Transform parent, Font font, string label, Vector2 anchoredPosition)
+	{
+		GameObject buttonObject = CreateUiObject(name, parent);
+		var image = buttonObject.AddComponent<Image>();
+		image.color = new Color(0.14f, 0.18f, 0.27f, 0.96f);
+
+		var button = buttonObject.AddComponent<Button>();
+		ColorBlock colors = button.colors;
+		colors.normalColor = image.color;
+		colors.highlightedColor = new Color(0.22f, 0.28f, 0.4f, 1f);
+		colors.pressedColor = new Color(0.08f, 0.12f, 0.2f, 1f);
+		colors.selectedColor = colors.highlightedColor;
+		colors.disabledColor = new Color(0.25f, 0.25f, 0.25f, 0.5f);
+		button.colors = colors;
+
+		SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), anchoredPosition, new Vector2(240f, 64f));
+
+		Text buttonText = CreateText("Label", buttonObject.transform, font, 30, FontStyle.Bold, TextAnchor.MiddleCenter);
+		buttonText.text = label;
+		buttonText.color = Color.white;
+		SetRect(buttonText.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+
+		return button;
+	}
+
+	Text CreateText(string name, Transform parent, Font font, int fontSize, FontStyle fontStyle, TextAnchor alignment)
+	{
+		GameObject textObject = CreateUiObject(name, parent);
+		var text = textObject.AddComponent<Text>();
+		text.font = font;
+		text.fontSize = fontSize;
+		text.fontStyle = fontStyle;
+		text.alignment = alignment;
+		text.horizontalOverflow = HorizontalWrapMode.Overflow;
+		text.verticalOverflow = VerticalWrapMode.Overflow;
+		text.text = string.Empty;
+		return text;
+	}
+
+	GameObject CreateUiObject(string name, Transform parent)
+	{
+		var go = new GameObject(name);
+		go.transform.SetParent(parent, false);
+		go.AddComponent<RectTransform>();
+		return go;
+	}
+
+	void SetRect(RectTransform rectTransform, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta)
+	{
+		rectTransform.anchorMin = anchorMin;
+		rectTransform.anchorMax = anchorMax;
+		rectTransform.pivot = new Vector2(0.5f, 0.5f);
+		rectTransform.anchoredPosition = anchoredPosition;
+		rectTransform.sizeDelta = sizeDelta;
 	}
 }
