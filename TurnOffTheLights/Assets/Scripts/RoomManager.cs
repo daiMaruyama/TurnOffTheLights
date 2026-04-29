@@ -24,7 +24,34 @@ public class RoomManager : MonoBehaviour
 		{
 			_instance = this;
 		}
+		NormalizeRooms();
 		InitializeRooms();
+	}
+
+	void NormalizeRooms()
+	{
+		var normalizedRooms = new List<RoomData>(_rooms.Count);
+		var registeredDoors = new HashSet<Transform>();
+
+		for (int i = 0; i < _rooms.Count; i++)
+		{
+			RoomData room = _rooms[i];
+			if (room == null || room.Door == null)
+			{
+				Debug.LogWarning($"[RoomManager] RoomData {i} は Door 参照がないため除外しました。");
+				continue;
+			}
+
+			if (!registeredDoors.Add(room.Door))
+			{
+				Debug.LogWarning($"[RoomManager] 重複したドア参照を除外しました: {room.Door.name}");
+				continue;
+			}
+
+			normalizedRooms.Add(room);
+		}
+
+		_rooms = normalizedRooms;
 	}
 
 	/// <summary>
@@ -70,9 +97,21 @@ public class RoomManager : MonoBehaviour
 	/// </summary>
 	public bool TryCloseRoom(int roomIndex)
 	{
-		if (roomIndex < 0 || roomIndex >= _rooms.Count) return false;
-		if (_rooms[roomIndex].IsAnimating) return false;
-		if (!_rooms[roomIndex].IsOpen) return false;
+		if (roomIndex < 0 || roomIndex >= _rooms.Count)
+		{
+			Debug.LogWarning($"[RoomManager][DIAG] index out of range: {roomIndex}");
+			return false;
+		}
+		if (_rooms[roomIndex].IsAnimating)
+		{
+			Debug.LogWarning($"[RoomManager][DIAG] room {roomIndex} is animating");
+			return false;
+		}
+		if (!_rooms[roomIndex].IsOpen)
+		{
+			Debug.LogWarning($"[RoomManager][DIAG] room {roomIndex} is not Open. Light enabled = {_rooms[roomIndex].RoomLight?.enabled}");
+			return false;
+		}
 
 		StartCoroutine(ToggleRoomCoroutine(roomIndex, false));
 		return true;
@@ -123,6 +162,12 @@ public class RoomManager : MonoBehaviour
 		RoomData room = _rooms[roomIndex];
 		room.IsAnimating = true;
 
+		// 閉める時はアニメ前にライトOFF（電気を消してから出てドアを閉める動作）
+		if (!open)
+		{
+			SetRoomLight(roomIndex, false);
+		}
+
 		Vector3 originalRotation = room.Door.localRotation.eulerAngles;
 
 		float startAngle = open ? 0f : -90f;
@@ -140,17 +185,27 @@ public class RoomManager : MonoBehaviour
 
 		room.Door.localRotation = Quaternion.Euler(originalRotation.x, endAngle, originalRotation.z);
 
+		// 開ける時はアニメ後にライトON（部屋に入って電気をつける動作）
+		if (open)
+		{
+			SetRoomLight(roomIndex, true);
+		}
+
+		room.IsOpen = open;
+		room.IsAnimating = false;
+	}
+
+	void SetRoomLight(int roomIndex, bool enabled)
+	{
+		RoomData room = _rooms[roomIndex];
 		if (room.RoomLight != null)
 		{
-			room.RoomLight.enabled = open;
+			room.RoomLight.enabled = enabled;
 		}
 		else
 		{
 			Debug.LogWarning($"Room {roomIndex + 1} のLightが未設定のため、ライト切り替えできません。");
 		}
-
-		room.IsOpen = open;
-		room.IsAnimating = false;
 	}
 
 	/// <summary>

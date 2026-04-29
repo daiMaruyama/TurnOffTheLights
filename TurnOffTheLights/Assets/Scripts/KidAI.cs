@@ -25,6 +25,7 @@ public class KidAI : MonoBehaviour
 	int _targetRoomIndex = -1;
 	bool _isWaitingAtDoor;
 	bool _isMovingToNextRoom;
+	bool _hasStartedPatrol;
 
 	void Start()
 	{
@@ -44,19 +45,39 @@ public class KidAI : MonoBehaviour
 			_rb.detectCollisions = true;
 		}
 
-		Invoke(nameof(PickRandomRoom), 0.5f);
+		if (_agent != null)
+		{
+			_agent.isStopped = true;
+		}
 	}
 
 	void Update()
 	{
-		if (_animator != null)
+		bool gameActive = ScoreManager.Instance != null && ScoreManager.Instance.IsGameActive;
+
+		if (!gameActive)
 		{
-			bool isMoving = _agent.velocity.magnitude > 0.05f && !_isWaitingAtDoor;
-			_animator.SetBool("IsMoving", isMoving);
+			StopMovement();
+			UpdateAnimation(false);
+			return;
 		}
 
-		if (!_agent.isOnNavMesh || !_agent.enabled) return;
+		if (!_hasStartedPatrol)
+		{
+			_hasStartedPatrol = true;
+			Invoke(nameof(PickRandomRoom), 0.5f);
+		}
+
+		bool isMoving = _agent != null && _agent.velocity.magnitude > 0.05f && !_isWaitingAtDoor;
+		UpdateAnimation(isMoving);
+
+		if (_agent == null || !_agent.isOnNavMesh || !_agent.enabled) return;
 		if (_isMovingToNextRoom) return;
+
+		if (_agent.isStopped && !_isWaitingAtDoor)
+		{
+			_agent.isStopped = false;
+		}
 
 		_timer += Time.deltaTime;
 
@@ -82,6 +103,34 @@ public class KidAI : MonoBehaviour
 			_agent.isStopped = false;
 			_timer = 0;
 			Invoke(nameof(PickRandomRoom), 1f);
+		}
+	}
+
+	void UpdateAnimation(bool isMoving)
+	{
+		if (_animator != null)
+		{
+			_animator.SetBool("IsMoving", isMoving);
+		}
+	}
+
+	void StopMovement()
+	{
+		if (_agent != null && _agent.enabled)
+		{
+			_agent.isStopped = true;
+			_agent.ResetPath();
+		}
+
+		_timer = 0f;
+		_isWaitingAtDoor = false;
+		_isMovingToNextRoom = false;
+		_targetRoomIndex = -1;
+
+		if (_rb != null)
+		{
+			_rb.linearVelocity = Vector3.zero;
+			_rb.angularVelocity = Vector3.zero;
 		}
 	}
 

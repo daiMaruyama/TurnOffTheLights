@@ -4,6 +4,7 @@
     "com.maruyama.gamejam-audio": "https://github.com/daiMaruyama/gamejam-framework.git?path=audio",
     "com.maruyama.gamejam-core": "https://github.com/daiMaruyama/gamejam-framework.git?path=core",
     "com.maruyama.gamejam-scene": "https://github.com/daiMaruyama/gamejam-framework.git?path=scene",
+    "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.navigation": "2.0.10",
     "com.unity.cinemachine": "3.1.5",
     "com.unity.collab-proxy": "2.11.3",

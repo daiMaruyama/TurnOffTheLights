@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using GameJamCore;
 using GameJamScene;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -26,13 +27,13 @@ public class ResultUI : MonoBehaviour
 
 	[Header("ランク基準（電気代の上限値）")]
 	[Tooltip("Sランク：この値以下")]
-	[SerializeField] float _rankSThreshold = 5000f;
+	[SerializeField] float _rankSThreshold = 3000f;
 
 	[Tooltip("Aランク：この値以下")]
-	[SerializeField] float _rankAThreshold = 20000f;
+	[SerializeField] float _rankAThreshold = 10000f;
 
 	[Tooltip("Bランク：この値以下、これを超えるとC")]
-	[SerializeField] float _rankBThreshold = 50000f;
+	[SerializeField] float _rankBThreshold = 30000f;
 
 	[Header("シーン名")]
 	[Tooltip("リトライ時に再ロードするシーン名")]
@@ -92,12 +93,22 @@ public class ResultUI : MonoBehaviour
 
 	public void OnRetryButtonClicked()
 	{
+		HideImmediate();
 		LoadSceneAsync(_inGameSceneName).Forget();
 	}
 
 	public void OnTitleButtonClicked()
 	{
+		HideImmediate();
 		LoadSceneAsync(_titleSceneName).Forget();
+	}
+
+	void HideImmediate()
+	{
+		if (_panel != null)
+		{
+			_panel.SetActive(false);
+		}
 	}
 
 	string CalculateRank(float cost)
@@ -132,7 +143,25 @@ public class ResultUI : MonoBehaviour
 
 	async UniTaskVoid LoadSceneAsync(string sceneName)
 	{
-		await ServiceLocator.Get<ISceneService>().LoadAsync(sceneName);
+		if (TryLoadWithSceneService(sceneName))
+		{
+			return;
+		}
+
+		SceneManager.LoadScene(sceneName);
+	}
+
+	bool TryLoadWithSceneService(string sceneName)
+	{
+		try
+		{
+			ServiceLocator.Get<ISceneService>().LoadAsync(sceneName).Forget();
+			return true;
+		}
+		catch (System.InvalidOperationException)
+		{
+			return false;
+		}
 	}
 
 	void EnsureUI()
@@ -161,7 +190,11 @@ public class ResultUI : MonoBehaviour
 		var canvas = canvasObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		canvas.sortingOrder = 100;
-		canvasObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+		var scaler = canvasObject.AddComponent<CanvasScaler>();
+		scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+		scaler.referenceResolution = new Vector2(1920f, 1080f);
+		scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+		scaler.matchWidthOrHeight = 0.5f;
 		canvasObject.AddComponent<GraphicRaycaster>();
 
 		_panel = CreateUiObject("Panel", canvasObject.transform);
@@ -172,30 +205,37 @@ public class ResultUI : MonoBehaviour
 		panelRect.offsetMax = Vector2.zero;
 
 		var panelImage = _panel.AddComponent<Image>();
-		panelImage.color = new Color(0.04f, 0.05f, 0.09f, 0.9f);
+		panelImage.color = new Color(0.02f, 0.03f, 0.06f, 0.9f);
 
-		var titleText = CreateText("TitleText", _panel.transform, font, 58, FontStyle.Bold, TextAnchor.MiddleCenter);
+		GameObject cardObject = CreateUiObject("Card", _panel.transform);
+		var cardRect = cardObject.GetComponent<RectTransform>();
+		SetRect(cardRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(820f, 560f));
+		var cardImage = cardObject.AddComponent<Image>();
+		cardImage.color = new Color(0.08f, 0.11f, 0.18f, 0.96f);
+
+		var titleText = CreateText("TitleText", cardObject.transform, font, 54, FontStyle.Bold, TextAnchor.MiddleCenter);
 		titleText.text = "RESULT";
 		titleText.color = Color.white;
-		SetRect(titleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 220f), new Vector2(720f, 80f));
+		SetRect(titleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 210f), new Vector2(720f, 72f));
 
-		_costText = CreateText("CostText", _panel.transform, font, 44, FontStyle.Bold, TextAnchor.MiddleCenter);
+		_costText = CreateText("CostText", cardObject.transform, font, 42, FontStyle.Bold, TextAnchor.MiddleCenter);
 		_costText.color = new Color(0.96f, 0.98f, 1f);
-		SetRect(_costText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 90f), new Vector2(720f, 120f));
+		SetRect(_costText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 88f), new Vector2(680f, 110f));
 
-		_rankText = CreateText("RankText", _panel.transform, font, 56, FontStyle.Bold, TextAnchor.MiddleCenter);
-		SetRect(_rankText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f), new Vector2(720f, 80f));
+		_rankText = CreateText("RankText", cardObject.transform, font, 64, FontStyle.Bold, TextAnchor.MiddleCenter);
+		SetRect(_rankText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -12f), new Vector2(720f, 86f));
 
-		_commentText = CreateText("CommentText", _panel.transform, font, 28, FontStyle.Normal, TextAnchor.MiddleCenter);
+		_commentText = CreateText("CommentText", cardObject.transform, font, 28, FontStyle.Normal, TextAnchor.MiddleCenter);
 		_commentText.color = new Color(0.86f, 0.9f, 0.96f);
 		_commentText.horizontalOverflow = HorizontalWrapMode.Wrap;
 		_commentText.verticalOverflow = VerticalWrapMode.Overflow;
-		SetRect(_commentText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -90f), new Vector2(760f, 100f));
+		_commentText.lineSpacing = 1.1f;
+		SetRect(_commentText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -120f), new Vector2(700f, 110f));
 
-		Button retryButton = CreateButton("RetryButton", _panel.transform, font, "RETRY", new Vector2(-170f, -220f));
+		Button retryButton = CreateButton("RetryButton", cardObject.transform, font, "RETRY", new Vector2(-150f, -220f));
 		retryButton.onClick.AddListener(OnRetryButtonClicked);
 
-		Button titleButton = CreateButton("TitleButton", _panel.transform, font, "TITLE", new Vector2(170f, -220f));
+		Button titleButton = CreateButton("TitleButton", cardObject.transform, font, "TITLE", new Vector2(150f, -220f));
 		titleButton.onClick.AddListener(OnTitleButtonClicked);
 
 		_panel.SetActive(false);

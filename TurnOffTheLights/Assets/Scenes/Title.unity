@@ -706,7 +706,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1255973178}
   - component: {fileID: 1255973177}
-  - component: {fileID: 1255973179}
   m_Layer: 0
   m_Name: SceneManager
   m_TagString: Untagged
@@ -742,19 +741,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1255973179
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1255973176}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81895480ceb1241489c21b3afdc87f78, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TitleStartButton
-  _nextSceneName: InGame
 --- !u!1 &1328530119
 GameObject:
   m_ObjectHideFlags: 0
@@ -917,7 +903,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1255973179}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: TitleStartButton, Assembly-CSharp
         m_MethodName: OnStartButtonClicked
         m_Mode: 1
@@ -967,6 +953,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1768804082}
   m_CullTransparentMesh: 1
+--- !u!1 &1908214864
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1908214866}
+  - component: {fileID: 1908214865}
+  m_Layer: 0
+  m_Name: Starter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1908214865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1908214864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81895480ceb1241489c21b3afdc87f78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TitleStartButton
+  _nextSceneName: InGame
+  _buttonPosition: {x: 0, y: -165}
+  _buttonSize: {x: 320, y: 72}
+  _titlePosition: {x: 0, y: 210}
+  _titleSize: {x: 920, y: 200}
+  _subtitlePosition: {x: 0, y: 70}
+  _subtitleSize: {x: 860, y: 90}
+  _hintPosition: {x: 0, y: -270}
+  _hintSize: {x: 720, y: 40}
+--- !u!4 &1908214866
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1908214864}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1926.7444, y: -0.00001, z: 994.9897}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -974,6 +1013,7 @@ SceneRoots:
   - {fileID: 481038137}
   - {fileID: 741070610}
   - {fileID: 1255973178}
+  - {fileID: 1908214866}
   - {fileID: 978779554}
   - {fileID: 571828888}
   - {fileID: 205651076}

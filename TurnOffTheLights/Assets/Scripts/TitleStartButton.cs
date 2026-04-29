@@ -7,25 +7,50 @@ using UnityEngine.UI;
 public class TitleStartButton : MonoBehaviour
 {
 	[SerializeField] string _nextSceneName = "InGame";
+	[SerializeField] Vector2 _buttonPosition = new Vector2(0f, -165f);
+	[SerializeField] Vector2 _buttonSize = new Vector2(320f, 72f);
+	[SerializeField] Vector2 _titlePosition = new Vector2(0f, 210f);
+	[SerializeField] Vector2 _titleSize = new Vector2(920f, 200f);
+	[SerializeField] Vector2 _subtitlePosition = new Vector2(0f, 70f);
+	[SerializeField] Vector2 _subtitleSize = new Vector2(860f, 90f);
+	[SerializeField] Vector2 _hintPosition = new Vector2(0f, -270f);
+	[SerializeField] Vector2 _hintSize = new Vector2(720f, 40f);
 
 	Button _button;
 	Text _buttonText;
 	Image _buttonImage;
 	RectTransform _runtimeRoot;
+	Image _heroBandImage;
 	Text _titleText;
 	Text _subtitleText;
 	Text _hintText;
 
 	void Start()
 	{
-		_button = FindAnyObjectByType<Button>();
+		Debug.Log($"[TitleStartButton] Start called on {gameObject.name}");
+		_button = FindAnyObjectByType<Button>(FindObjectsInactive.Include);
+		Debug.Log($"[TitleStartButton] Button found: {(_button != null ? _button.name : "NULL")}");
 		if (_button != null)
 		{
-			_buttonText = _button.GetComponentInChildren<Text>();
+			_button.gameObject.SetActive(true);
+			_button.interactable = true;
+			_button.onClick.RemoveListener(OnStartButtonClicked);
+			_button.onClick.AddListener(OnStartButtonClicked);
+			_buttonText = _button.GetComponentInChildren<Text>(true);
 			_buttonImage = _button.GetComponent<Image>();
+
+			if (_buttonImage != null)
+			{
+				_buttonImage.enabled = true;
+			}
+			if (_buttonText != null)
+			{
+				_buttonText.enabled = true;
+			}
 		}
 
 		BuildTitlePresentation();
+		Debug.Log($"[TitleStartButton] BuildTitlePresentation done. _runtimeRoot={(_runtimeRoot == null ? "NULL" : _runtimeRoot.name)}");
 	}
 
 	void Update()
@@ -58,6 +83,18 @@ public class TitleStartButton : MonoBehaviour
 
 	public void OnStartButtonClicked()
 	{
+		if (_button != null)
+		{
+			_button.interactable = false;
+		}
+		if (_buttonImage != null)
+		{
+			_buttonImage.enabled = false;
+		}
+		if (_buttonText != null)
+		{
+			_buttonText.enabled = false;
+		}
 		LoadNextSceneAsync().Forget();
 	}
 
@@ -75,35 +112,40 @@ public class TitleStartButton : MonoBehaviour
 			return;
 		}
 
+		ConfigureCanvas(canvas);
 		Font font = ResolveFont();
 		_runtimeRoot = CreateOrFindRoot(canvas.transform);
+		EnsureHeroBand();
+		ConfigureButtonLayout();
 
 		if (_buttonText != null)
 		{
 			_buttonText.text = "START SHIFT";
-			_buttonText.fontSize = 40;
+			_buttonText.fontSize = 38;
 			_buttonText.fontStyle = FontStyle.Bold;
+			_buttonText.alignment = TextAnchor.MiddleCenter;
 		}
 
 		if (_buttonImage != null)
 		{
 			_buttonImage.type = Image.Type.Sliced;
+			_buttonImage.color = new Color(0.12f, 0.18f, 0.29f, 0.96f);
 		}
 
-		_titleText = CreateOrFindText("RuntimeTitleText", _runtimeRoot, font, 82, FontStyle.Bold, TextAnchor.UpperCenter);
+		_titleText = CreateOrFindText("RuntimeTitleText", _runtimeRoot, font, 88, FontStyle.Bold, TextAnchor.MiddleCenter);
 		_titleText.text = "Turn Off\nThe Lights";
 		_titleText.color = new Color(0.94f, 0.97f, 1f);
-		SetRect(_titleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -160f), new Vector2(900f, 190f));
+		SetRect(_titleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _titlePosition, _titleSize);
 
-		_subtitleText = CreateOrFindText("RuntimeSubtitleText", _runtimeRoot, font, 28, FontStyle.Normal, TextAnchor.UpperCenter);
-		_subtitleText.text = "子どもたちが次々と電気をつける夜の寮を、\n時間内に見回って節電するステルス清掃ゲーム";
+		_subtitleText = CreateOrFindText("RuntimeSubtitleText", _runtimeRoot, font, 28, FontStyle.Normal, TextAnchor.MiddleCenter);
+		_subtitleText.text = "子どもがつけた電気を消して、電気代を抑えろ。";
 		_subtitleText.color = new Color(0.76f, 0.84f, 0.96f);
-		SetRect(_subtitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -320f), new Vector2(920f, 90f));
+		SetRect(_subtitleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _subtitlePosition, _subtitleSize);
 
-		_hintText = CreateOrFindText("RuntimeHintText", _runtimeRoot, font, 24, FontStyle.Italic, TextAnchor.LowerCenter);
+		_hintText = CreateOrFindText("RuntimeHintText", _runtimeRoot, font, 24, FontStyle.Italic, TextAnchor.MiddleCenter);
 		_hintText.text = "WASD で移動  /  E 長押しで消灯";
 		_hintText.color = new Color(0.92f, 0.95f, 1f, 0.75f);
-		SetRect(_hintText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(720f, 40f));
+		SetRect(_hintText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _hintPosition, _hintSize);
 	}
 
 	void CleanupRuntimePresentation()
@@ -133,6 +175,52 @@ public class TitleStartButton : MonoBehaviour
 		return rect;
 	}
 
+	void ConfigureCanvas(Canvas canvas)
+	{
+		CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+		if (scaler == null)
+		{
+			return;
+		}
+
+		scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+		scaler.referenceResolution = new Vector2(1920f, 1080f);
+		scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+		scaler.matchWidthOrHeight = 0.5f;
+	}
+
+	void EnsureHeroBand()
+	{
+		Transform existing = _runtimeRoot.Find("HeroBand");
+		GameObject go = existing != null ? existing.gameObject : new GameObject("HeroBand");
+		if (existing == null)
+		{
+			go.transform.SetParent(_runtimeRoot, false);
+			go.AddComponent<RectTransform>();
+		}
+
+		RectTransform rect = go.GetComponent<RectTransform>();
+		SetRect(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(1120f, 620f));
+
+		if (!go.TryGetComponent(out _heroBandImage))
+		{
+			_heroBandImage = go.AddComponent<Image>();
+		}
+		_heroBandImage.color = new Color(0.04f, 0.07f, 0.12f, 0.38f);
+		_heroBandImage.raycastTarget = false;
+	}
+
+	void ConfigureButtonLayout()
+	{
+		if (_button == null)
+		{
+			return;
+		}
+
+		RectTransform buttonRect = _button.GetComponent<RectTransform>();
+		SetRect(buttonRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _buttonPosition, _buttonSize);
+	}
+
 	Text CreateOrFindText(string objectName, Transform parent, Font font, int fontSize, FontStyle fontStyle, TextAnchor alignment)
 	{
 		Transform existing = parent.Find(objectName);
@@ -155,6 +243,7 @@ public class TitleStartButton : MonoBehaviour
 		text.alignment = alignment;
 		text.horizontalOverflow = HorizontalWrapMode.Wrap;
 		text.verticalOverflow = VerticalWrapMode.Overflow;
+		text.raycastTarget = false;
 		return text;
 	}
 
