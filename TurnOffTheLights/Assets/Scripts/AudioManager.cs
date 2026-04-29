@@ -80,6 +80,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
+            StopBGM();
             Debug.Log($"このシーン専用のBGMは登録されていません: {scene.name}");
         }
     }
