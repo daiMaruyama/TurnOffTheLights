@@ -17053,7 +17053,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bef82b38427a8a4ba6a66c9e68b08e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
-  _electricityRatePerSecond: 150
+  _electricityRatePerSecond: 1000
   _gameDuration: 60
   OnGameEnd:
     m_PersistentCalls:
@@ -29429,7 +29429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _soundDatas:
-  - name: BGM_SampleScene
+  - name: BGM_InGame
     audioClip: {fileID: 8300000, guid: 85750912522b9254790e692a71754516, type: 3}
     playedTime: 0
   _maxAudioSources: 3
